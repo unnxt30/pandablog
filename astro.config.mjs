@@ -5,6 +5,9 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://unnat.xyz',
   trailingSlash: 'always',
+  // Hide Astro's dev toolbar (the floating overlay in `astro dev`); it never
+  // ships to production anyway, but this removes it from local dev too.
+  devToolbar: { enabled: false },
   integrations: [sitemap()],
   markdown: {
     shikiConfig: { theme: 'github-dark-default', wrap: true },
