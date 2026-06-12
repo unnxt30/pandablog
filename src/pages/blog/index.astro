@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { fmtDate } from '../../utils';
+
+const posts = (await getCollection('blog', ({ data }) =>
+  import.meta.env.PROD ? !data.draft : true,
+)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<Base title="Blog">
+  <ul class="blog-posts">
+    {posts.length === 0 && <li>No posts yet</li>}
+    {posts.map((post) => (
+      <li>
+        <span><time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time></span>
+        <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+      </li>
+    ))}
+  </ul>
+</Base>
