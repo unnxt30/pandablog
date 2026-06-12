@@ -9,7 +9,7 @@ export default defineConfig({
   markdown: {
     shikiConfig: { theme: 'github-dark-default', wrap: true },
   },
-  redirects: {
-    '/feed/': '/rss.xml',
-  },
+  // /feed/ -> /rss.xml is handled by a Vercel redirect (vercel.json). An Astro
+  // `redirects` entry can't be used: `trailingSlash: 'always'` rewrites the
+  // target to `/rss.xml/`, which 404s (the build artifact is the file `rss.xml`).
 });

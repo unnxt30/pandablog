@@ -45,22 +45,33 @@ app.post('/api/publish', async (c) => {
   writeFileSync(file, serializePost({ data: { ...data, draft: false }, body }), 'utf-8');
   try {
     git(['add', file]);
-    git(['commit', '-m', `Publish: ${data.title || slug}`]);
-    git(['push']);
-    return c.json({ ok: true, slug });
+    // If nothing is staged (re-publishing byte-identical content), skip the empty
+    // commit — `git commit` exits non-zero with nothing to commit. `git diff
+    // --cached --quiet` exits 0 when there are NO staged changes.
+    let changed = true;
+    try { git(['diff', '--cached', '--quiet', '--', file]); changed = false; } catch { changed = true; }
+    if (changed) {
+      git(['commit', '-m', `Publish: ${data.title || slug}`]);
+      git(['push']);
+    }
+    return c.json({ ok: true, slug, deployed: changed });
   } catch (e) {
     return c.json({ error: 'git failed', detail: String(e.stderr || e.message) }, 500);
   }
 });
 
-// delete: remove file; if commit=true also commit+push the removal
+// delete: remove the file. If it was committed (tracked) and commit=true, push the
+// removal. Untracked drafts are just removed from disk — no commit (git add would
+// fail on a now-deleted untracked path and falsely report failure).
 app.delete('/api/posts/:slug', async (c) => {
   const slug = c.req.param('slug');
   if (!validateSlug(slug) || !existsSync(postFile(slug))) return c.json({ error: 'not found' }, 404);
   const commit = c.req.query('commit') === 'true';
   const file = postFile(slug);
+  let tracked = false;
+  try { tracked = git(['ls-files', '--', file]).trim() !== ''; } catch { tracked = false; }
   rmSync(file);
-  if (commit) {
+  if (commit && tracked) {
     try {
       git(['add', file]);
       git(['commit', '-m', `Delete: ${slug}`]);
@@ -69,7 +80,7 @@ app.delete('/api/posts/:slug', async (c) => {
       return c.json({ error: 'git failed', detail: String(e.stderr || e.message) }, 500);
     }
   }
-  return c.json({ ok: true });
+  return c.json({ ok: true, committed: commit && tracked });
 });
 
 // --- static: theme CSS + vendored markdown-it + the editor UI ---
