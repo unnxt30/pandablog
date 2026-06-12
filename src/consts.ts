@@ -5,4 +5,5 @@ export const NAV: { href: string; label: string }[] = [
   { href: '/', label: 'home' },
   { href: '/blog/', label: 'blog' },
   { href: '/shack/', label: 'shack' },
+  { href: '/search/', label: 'search' },
 ];
