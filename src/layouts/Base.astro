@@ -14,6 +14,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script is:inline>
+      // apply the saved theme before paint so there's no flash; no attribute = follow the OS
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
     <meta name="robots" content="index, follow" />
@@ -58,7 +67,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <header>
       <a class="title" href="/"><h1>{SITE_TITLE}</h1></a>
       <nav>
-        <p>{NAV.map((l) => <a href={l.href}>{l.label}</a>)}</p>
+        <p>
+          {NAV.map((l) => <a href={l.href}>{l.label}</a>)}
+          <button class="theme-toggle" type="button" aria-label="Toggle theme"></button>
+        </p>
       </nav>
     </header>
     <main>
@@ -66,9 +78,35 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     </main>
     <footer>
       <span>made with ❤️ by <a href="https://github.com/unnxt30">unnxt30</a></span>
+      <button class="cat-toggle" type="button" aria-label="Toggle the cursor cat"></button>
     </footer>
 
     <script>
+      // --- theme toggle ---
+      const SUN = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+      const MOON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+      const themeBtn = document.querySelector('.theme-toggle');
+      if (themeBtn) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        const current = () => document.documentElement.getAttribute('data-theme') || (prefersDark.matches ? 'dark' : 'light');
+        const render = () => {
+          const dark = current() === 'dark';
+          themeBtn.innerHTML = dark ? SUN : MOON; // show the mode you'll switch to
+          themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+        };
+        render();
+        themeBtn.addEventListener('click', () => {
+          const next = current() === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          try { localStorage.setItem('theme', next); } catch (e) {}
+          render();
+        });
+        // follow the OS while the visitor hasn't made an explicit choice
+        prefersDark.addEventListener('change', () => {
+          if (!document.documentElement.getAttribute('data-theme')) render();
+        });
+      }
+
       const COPY = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
       const DONE = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
       document.querySelectorAll('pre.astro-code').forEach((pre) => {
@@ -108,6 +146,130 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
         img.replaceWith(a);
         a.appendChild(img);
       });
+    </script>
+
+    <script>
+      // oneko — a pixel cat that chases the cursor. Toggleable, remembered in localStorage.
+      (function () {
+        const btn = document.querySelector('.cat-toggle');
+        if (!btn) return;
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        let nekoEl = null, rafId = null, onMove = null;
+
+        function startNeko() {
+          if (nekoEl) return;
+          const size = 32, speed = 10;
+          let posX = 32, posY = 32, mouseX = 32, mouseY = 32;
+          let frameCount = 0, idleTime = 0, idleAnim = null, idleFrame = 0;
+
+          const sprites = {
+            idle: [[-3, -3]], alert: [[-7, -3]], tired: [[-3, -2]],
+            sleeping: [[-2, 0], [-2, -1]],
+            scratchSelf: [[-5, 0], [-6, 0], [-7, 0]],
+            scratchWallN: [[0, 0], [0, -1]], scratchWallS: [[-7, -1], [-6, -2]],
+            scratchWallE: [[-2, -2], [-2, -3]], scratchWallW: [[-4, 0], [-4, -1]],
+            N: [[-1, -2], [-1, -3]], NE: [[0, -2], [0, -3]], E: [[-3, 0], [-3, -1]],
+            SE: [[-5, -1], [-5, -2]], S: [[-6, -3], [-7, -2]], SW: [[-5, -3], [-6, -1]],
+            W: [[-4, -2], [-4, -3]], NW: [[-1, 0], [-1, -1]],
+          };
+
+          nekoEl = document.createElement('div');
+          nekoEl.id = 'oneko';
+          nekoEl.setAttribute('aria-hidden', 'true');
+          Object.assign(nekoEl.style, {
+            width: '32px', height: '32px', position: 'fixed', left: '16px', top: '16px',
+            pointerEvents: 'none', imageRendering: 'pixelated', zIndex: '2147483647',
+            backgroundImage: "url('/oneko.gif')",
+          });
+          document.body.appendChild(nekoEl);
+
+          onMove = (e) => { mouseX = e.clientX; mouseY = e.clientY; };
+          document.addEventListener('mousemove', onMove);
+
+          const setSprite = (name, frame) => {
+            const s = sprites[name][frame % sprites[name].length];
+            nekoEl.style.backgroundPosition = `${s[0] * size}px ${s[1] * size}px`;
+          };
+          const resetIdle = () => { idleAnim = null; idleFrame = 0; };
+
+          function idle() {
+            idleTime += 1;
+            if (idleTime > 10 && Math.floor(Math.random() * 200) === 0 && idleAnim == null) {
+              const opts = ['sleeping', 'scratchSelf'];
+              if (posX < 32) opts.push('scratchWallW');
+              if (posY < 32) opts.push('scratchWallN');
+              if (posX > innerWidth - 32) opts.push('scratchWallE');
+              if (posY > innerHeight - 32) opts.push('scratchWallS');
+              idleAnim = opts[Math.floor(Math.random() * opts.length)];
+            }
+            switch (idleAnim) {
+              case 'sleeping':
+                if (idleFrame < 8) { setSprite('tired', 0); break; }
+                setSprite('sleeping', Math.floor(idleFrame / 4));
+                if (idleFrame > 192) resetIdle();
+                break;
+              case 'scratchWallN': case 'scratchWallS': case 'scratchWallE':
+              case 'scratchWallW': case 'scratchSelf':
+                setSprite(idleAnim, idleFrame);
+                if (idleFrame > 9) resetIdle();
+                break;
+              default: setSprite('idle', 0); return;
+            }
+            idleFrame += 1;
+          }
+
+          function frame() {
+            frameCount += 1;
+            const dx = posX - mouseX, dy = posY - mouseY;
+            const dist = Math.hypot(dx, dy);
+            if (dist < speed || dist < 48) { idle(); return; }
+            resetIdle();
+            if (idleTime > 1) { setSprite('alert', 0); idleTime = Math.min(idleTime, 7) - 1; return; }
+            let dir = '';
+            dir += dy / dist > 0.5 ? 'N' : '';
+            dir += dy / dist < -0.5 ? 'S' : '';
+            dir += dx / dist > 0.5 ? 'W' : '';
+            dir += dx / dist < -0.5 ? 'E' : '';
+            setSprite(dir, frameCount);
+            posX -= (dx / dist) * speed;
+            posY -= (dy / dist) * speed;
+            posX = Math.min(Math.max(16, posX), innerWidth - 16);
+            posY = Math.min(Math.max(16, posY), innerHeight - 16);
+            nekoEl.style.left = `${posX - 16}px`;
+            nekoEl.style.top = `${posY - 16}px`;
+            idleTime = 0;
+          }
+
+          let last = 0;
+          (function loop(ts) {
+            if (!nekoEl || !nekoEl.isConnected) return;
+            if (ts - last > 100) { frame(); last = ts; }
+            rafId = requestAnimationFrame(loop);
+          })(0);
+        }
+
+        function stopNeko() {
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+          if (onMove) { document.removeEventListener('mousemove', onMove); onMove = null; }
+          if (nekoEl) { nekoEl.remove(); nekoEl = null; }
+        }
+
+        let stored = null;
+        try { stored = localStorage.getItem('oneko'); } catch (e) {}
+        let on = stored === 'on' ? true : stored === 'off' ? false : !reduce; // default on unless reduced-motion
+
+        const apply = () => {
+          btn.textContent = on ? '🐱 shoo cat' : '🐾 summon cat';
+          if (on) startNeko(); else stopNeko();
+        };
+        btn.addEventListener('click', () => {
+          on = !on;
+          try { localStorage.setItem('oneko', on ? 'on' : 'off'); } catch (e) {}
+          apply();
+        });
+        apply();
+      })();
     </script>
   </body>
 </html>
