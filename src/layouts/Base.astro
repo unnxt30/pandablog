@@ -96,6 +96,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
         });
         wrap.appendChild(btn);
       });
+
+      // open in-post images in a new tab (wrap each image in a link to the full file)
+      document.querySelectorAll('article img').forEach((img) => {
+        if (img.closest('a')) return; // already linked
+        const a = document.createElement('a');
+        a.href = img.getAttribute('src') || img.src;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.title = 'Open image in new tab';
+        img.replaceWith(a);
+        a.appendChild(img);
+      });
     </script>
   </body>
 </html>
