@@ -1,0 +1,24 @@
+---
+import Base from './Base.astro';
+import { fmtDate, tagSlug } from '../utils';
+
+interface Props {
+  title: string;
+  date: Date;
+  description?: string;
+  tags: string[];
+}
+const { title, date, description, tags } = Astro.props;
+---
+<Base title={title} description={description}>
+  <article data-pagefind-body>
+    <h1>{title}</h1>
+    <p><time datetime={date.toISOString()}>{fmtDate(date)}</time></p>
+    <slot />
+    {tags.length > 0 && (
+      <p class="tags">
+        {tags.map((t) => <a href={`/tags/${tagSlug(t)}/`}>#{t}</a>)}
+      </p>
+    )}
+  </article>
+</Base>
