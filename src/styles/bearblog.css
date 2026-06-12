@@ -110,3 +110,21 @@ th::after, td::after { bottom: -0.25em; left: -0.25em; }
 th::before, td::before { top: -0.25em; right: -0.25em; }
 
 th:last-child::before, td:last-child::before { top: initial; bottom: -0.25em; }
+
+/* --- syntax-highlighting: keep bearblog's code aesthetic over Shiki --- */
+pre.astro-code {
+  background-color: var(--code-background-color) !important;
+  padding: var(--spacing);
+  box-shadow: 0 4px 0 var(--color-dark), 0 -4px 0 var(--color-dark),
+    4px 0 var(--color-dark), -4px 0 0 var(--color-dark),
+    inset -4px -4px 0 rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
+  font-size: var(--size-step-0);
+  line-height: 1.4;
+}
+pre.astro-code code {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-stack);
+}
