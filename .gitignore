@@ -1,0 +1,15 @@
+# deps / build
+node_modules/
+dist/
+.astro/
+.vercel/
+
+# os / editor
+.DS_Store
+
+# pagefind output (generated)
+public/pagefind/
+
+# local planning + scrape artifacts (never commit to the public blog repo)
+docs/superpowers/
+.firecrawl/

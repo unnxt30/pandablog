@@ -1,0 +1,26 @@
+{
+  "name": "blog",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "studio": "concurrently -k -n astro,studio -c blue,green \"astro dev\" \"node studio/server.js\"",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "astro": "^6.4.6",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "pagefind": "^1.5.2"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^2.0.4",
+    "hono": "^4.12.25",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.2.0",
+    "concurrently": "^10.0.3"
+  }
+}
