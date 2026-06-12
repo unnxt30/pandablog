@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { fmtDate, tagSlug } from '../../utils';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) =>
+    import.meta.env.PROD ? !data.draft : true,
+  );
+  const groups = new Map<string, { name: string; posts: CollectionEntry<'blog'>[] }>();
+  for (const p of posts) {
+    for (const t of p.data.tags) {
+      const s = tagSlug(t);
+      if (!groups.has(s)) groups.set(s, { name: t, posts: [] });
+      groups.get(s)!.posts.push(p);
+    }
+  }
+  return [...groups.entries()].map(([slug, { name, posts }]) => ({
+    params: { tag: slug },
+    props: {
+      name,
+      posts: posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+const { name, posts } = Astro.props;
+---
+<Base title={`#${name}`}>
+  <h1>#{name}</h1>
+  <ul class="blog-posts">
+    {posts.map((post) => (
+      <li>
+        <span><time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time></span>
+        <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+      </li>
+    ))}
+  </ul>
+</Base>
