@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>studio</title>
+  <link rel="stylesheet" href="/bearblog.css" />
+  <style>
+    body { display: grid; grid-template-columns: 240px 1fr; gap: 1rem; max-width: none; }
+    #sidebar { border-right: 0.25em solid var(--color-dark); padding-right: 1rem; }
+    #sidebar li { cursor: pointer; margin: 0.4rem 0; }
+    #sidebar .draft::after { content: " [draft]"; color: var(--color-primary); }
+    .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    textarea#body { width: 100%; min-height: 60vh; font-family: var(--font-stack); font-size: 0.9rem; }
+    input, .field { width: 100%; margin-bottom: 0.6rem; font-family: var(--font-stack); }
+    #preview { border: 0.25em solid var(--color-dark); padding: 0.6rem; overflow: auto; min-height: 60vh; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    dialog { font-family: var(--font-stack); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <nav id="sidebar">
+    <button id="new">＋ New post</button>
+    <ul id="list" class="blog-posts"></ul>
+  </nav>
+
+  <main>
+    <div class="row">
+      <input id="title" placeholder="Title" />
+      <button id="save">Save draft</button>
+      <button id="preview-btn">Preview</button>
+      <button id="publish">Publish</button>
+      <button id="delete">Delete</button>
+    </div>
+    <div class="row">
+      <input id="date" type="date" class="field" />
+      <input id="tags" placeholder="tags, comma separated" class="field" />
+    </div>
+    <div class="editor-grid">
+      <textarea id="body" placeholder="# Write markdown here"></textarea>
+      <div id="preview"></div>
+    </div>
+    <p id="status"></p>
+  </main>
+
+  <dialog id="confirm">
+    <p id="confirm-msg"></p>
+    <div class="row">
+      <button id="confirm-yes">Yes</button>
+      <button id="confirm-no">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- vendored, served by studio server (no CDN, fully local) -->
+  <script src="/vendor/markdown-it.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
