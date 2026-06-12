@@ -128,3 +128,6 @@ pre.astro-code code {
   box-shadow: none;
   font-family: var(--font-stack);
 }
+
+/* --- center the footer (bearblog left-aligns it; centered reads cleaner) --- */
+footer { text-align: center; }
