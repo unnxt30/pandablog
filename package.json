@@ -14,7 +14,8 @@
     "astro": "^6.4.6",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
-    "pagefind": "^1.5.2"
+    "pagefind": "^1.5.2",
+    "@vercel/analytics": "^2.0.1"
   },
   "devDependencies": {
     "@hono/node-server": "^2.0.4",

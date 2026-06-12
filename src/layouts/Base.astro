@@ -1,6 +1,7 @@
 ---
 import '../styles/bearblog.css';
 import { SITE_TITLE, SITE_DESCRIPTION, NAV } from '../consts';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
@@ -50,6 +51,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
         description: SITE_DESCRIPTION,
       })}
     />
+
+    <Analytics />
   </head>
   <body>
     <header>
