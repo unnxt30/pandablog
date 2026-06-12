@@ -131,3 +131,24 @@ pre.astro-code code {
 
 /* --- center the footer (bearblog left-aligns it; centered reads cleaner) --- */
 footer { text-align: center; }
+
+/* --- copy-to-clipboard button on code blocks --- */
+.code-wrap { position: relative; margin-block: var(--spacing); }
+.code-wrap pre.astro-code { margin: 0; }
+.copy-code {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  line-height: 0;
+  color: var(--color-primary);
+  background: transparent;
+  border: 0.15em solid var(--color-primary);
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: pointer;
+}
+.copy-code:hover { opacity: 1; color: var(--color-primary); background: transparent; box-shadow: none; }
+.copy-code.copied { opacity: 1; }
