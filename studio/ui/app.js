@@ -26,6 +26,38 @@ function renderPreview() {
 
 function setStatus(msg) { $('status').textContent = msg; }
 
+function insertAtCursor(text) {
+  const ta = $('body');
+  const start = ta.selectionStart ?? ta.value.length;
+  const end = ta.selectionEnd ?? ta.value.length;
+  ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+  ta.focus();
+  renderPreview();
+}
+
+// Paste an image into the editor -> upload to public/images/ -> insert markdown.
+async function handlePaste(e) {
+  const item = [...(e.clipboardData?.items || [])].find((it) => it.type.startsWith('image/'));
+  if (!item) return; // not an image — let the normal text paste happen
+  e.preventDefault();
+  const blob = item.getAsFile();
+  const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+  setStatus('uploading image…');
+  try {
+    const r = await fetch(`/api/images?ext=${ext}`, {
+      method: 'POST',
+      headers: { 'content-type': blob.type },
+      body: blob,
+    });
+    const j = await r.json();
+    if (j.path) { insertAtCursor(`![](${j.path})`); setStatus(`inserted ${j.path}`); }
+    else setStatus(`image upload failed: ${j.error}`);
+  } catch (err) {
+    setStatus(`image upload failed: ${err}`);
+  }
+}
+
 async function loadList() {
   const posts = await (await fetch('/api/posts')).json();
   $('list').innerHTML = '';
@@ -126,6 +158,7 @@ async function del() {
 }
 
 $('body').addEventListener('input', renderPreview);
+$('body').addEventListener('paste', handlePaste);
 $('new').onclick = newPost;
 $('save').onclick = save;
 $('preview-btn').onclick = preview;
